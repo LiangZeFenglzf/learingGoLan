@@ -53,7 +53,7 @@ type 的值`SyncedBuffer`也可以在分配或声明后立即使用。在下一�
 
 Since the memory returned by `new` is zeroed, it's helpful to arrange when designing your data structures that the zero value of each type can be used without further initialization. 
 
-由于返回的内存`new`已归零，因此在设计数据结构时安排每种类型的零值无需进一步初始化即可使用         是有帮助的。
+由于通过`new`返回的存储空间已归零，因此在设计数据结构时安排每种类型的零值无需进一步初始化即可使用       是有帮助的。
 
 This means a user of the data structure can create one with `new` and get right to work. 意味着通过内置函数new就可以立马使用不用初始化
 

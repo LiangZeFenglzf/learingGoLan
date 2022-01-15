@@ -114,29 +114,27 @@ B4的基类也是                                                       []B1
 
 ## 2介绍各种类型
 
-### 2.1Method sets
+### 2.1Method sets参考2.10
+
+a type有（可能为空的）方法集与之关联。
 
 A type has a (possibly empty) *method set* associated with it. 对应上类型的定义1.1 操作
 
-The method set of an [interface type](https://go.dev/ref/spec#Interface_types) is its interface. 
+The method set of an [interface type](https://go.dev/ref/spec#Interface_types) is its interface. 接口类型的
 
-The method set of any other type `T` consists of all [methods](https://go.dev/ref/spec#Method_declarations) declared with receiver type `T`. 
+The method set of any other type `T` consists of all [methods](https://go.dev/ref/spec#Method_declarations) declared with receiver type `T`. 只要类型为T ,方法集 包含了 所有 声明了接收者类型为T的方法。
 
-只要类型为T ,方法集 包含了 所有 声明了接收者类型为T的方法。
-
-The method set of the corresponding [pointer type](https://go.dev/ref/spec#Pointer_types) `*T` is the set of all methods declared with receiver `*T` or `T` (that is, it also contains the method set of `T`).
-
-类型为*T的包含了 声明接收者类型为T和\n *T的方法
+The method set of the corresponding [pointer type](https://go.dev/ref/spec#Pointer_types) `*T` is the set of all methods declared with receiver `*T` or `T` (that is, it also contains the method set of `T`). 类型为`*T`的包含了 声明接收者类型为`T`和`*T`的方法
 
  Further rules apply to structs containing embedded fields, as described in the section on [struct types](https://go.dev/ref/spec#Struct_types). 更多规则适用于包含嵌入字段的结构，如[结构类型](https://go.dev/ref/spec#Struct_types)部分所述。
 
 Any other type has an empty method set. In a method set, each method must have a [unique](https://go.dev/ref/spec#Uniqueness_of_identifiers) non-[blank](https://go.dev/ref/spec#Blank_identifier) [method name](https://go.dev/ref/spec#MethodName).任何其他类型都有一个空的方法集。在一个方法集中，每个方法.....
 
-#### 2.1.1不懂
+#### 2.1.1空接口 interface{} 方法集为空，任何类型都实现空接口
 
 The method set of a type determines the interfaces that the type [implements](https://go.dev/ref/spec#Interface_types) and the methods that can be [called](https://go.dev/ref/spec#Calls) using a receiver of that type.
 
-类型的方法集决定了该类型[实现](https://go.dev/ref/spec#Interface_types)的接口 以及可以 使用该类型的接收器[调用](https://go.dev/ref/spec#Calls)的方法。
+ a type的方法集决定了该类型[实现](https://go.dev/ref/spec#Interface_types)的接口 [一个类型 的方法集可能有好多方法，实现了方法也就是实现了多个接口。如果是空的方法集，任何类型都实现了空接口]以及可以 使用该类型的接收器[调用](https://go.dev/ref/spec#Calls)的方法。 [int有空的方法集 也就是实现了空接口，接收器为Int调用空方法，也就是接收器如果是int类型实际上是无意义的]
 
 ### 2.2Boolean types
 
@@ -460,7 +458,7 @@ func(n int) func(p *T)
 
 An interface type specifies a [method set](https://go.dev/ref/spec#Method_sets) called its *interface*. 一个指定了方法集的接口类型 称为interface
 
-##### 疑问：斜体的interface？
+##### 也就是说 赋值给接口变量的值 的类型，具有的方法集 要比这个接口类型具有的方法多（最少的情况下是 方法集和 接口类型的方法集方法数目一致）
 
 A variable of interface type can store a value of any type with a method set that is any superset of the interface.
 
@@ -468,18 +466,24 @@ A variable of interface type can store a value of any type with a method set tha
 
  Such a type is said to *implement the interface*. 
 
-##### 特点：未初始化的值为nil 
+##### 超集和子集？超集 就是 我实现了很多接口，子集就是 我的方法 集  是你实现的方法集的一部分罢了
+
+supset和subset 不明白，没看懂
+
+#### 2特点：未初始化的值为nil 
 
 The value of an uninitialized variable of interface type is `nil`.
 
 ```
 InterfaceType      = "interface" "{" { ( MethodSpec | InterfaceTypeName ) ";" } "}" .
+interface 关键字 后面接 {} 括号内 可以是 方法的重复| 接口类型名重复    方法 之包含方法名和方法签名 不含func关键字
+
 MethodSpec         = MethodName Signature .
 MethodName         = identifier .
 InterfaceTypeName  = TypeName .
 ```
 
-##### 接口方法2种方式
+#### 3接口方法2种方式
 
 An interface type may specify methods *explicitly* through method specifications, or it may *embed* methods of other interfaces through interface type names.一个接口类型   要么显式的声明方法，要么 通过接口类型名    内嵌其他接口的方法
 
@@ -492,7 +496,7 @@ interface {
 }
 ```
 
-###### 显式
+##### 3.1显式
 
 The name of each explicitly specified method must be [unique](https://go.dev/ref/spec#Uniqueness_of_identifiers) and not [blank](https://go.dev/ref/spec#Blank_identifier).显式指定的方法必须唯一 不为Blank
 
@@ -504,6 +508,8 @@ interface {
 }
 ```
 
+#### 4接口复用
+
 More than one type may implement an interface. For instance, if two types `S1` and `S2` have the method set
 
 ```
@@ -514,13 +520,19 @@ func (p T) Close() error
 
 (where `T` stands for either `S1` or `S2`) then the `File` interface is implemented by both `S1` and `S2`, regardless of what other methods `S1` and `S2` may have or share.
 
-A type implements any interface comprising any subset of its methods and may therefore implement several distinct interfaces. For instance, all types implement the *empty interface*:
+一个接口可以被多个type 实现，例如 如果类型 `s1`和`s2`都有上面的method set（T就是s1或s2），那么我们说这个接口 被s1 ,s2都实现了，不用去管 s1,s2有的，或共享的其他方法
+
+#### 5同一类型可实现多个接口
+
+A type implements any interface comprising any **subset** of its methods and may therefore implement several distinct interfaces. For instance, all types implement the *empty interface*:一个类型实现了任何接口，接口包含 它方法的子集，因此可以实现几个不同的接口。例如，所有类型都实现了*空接口*：
 
 ```
 interface{}
 ```
 
 Similarly, consider this interface specification, which appears within a [type declaration](https://go.dev/ref/spec#Type_declarations) to define an interface called `Locker`:
+
+考虑到这个接口特性，在定义一个Locker接口的 接口声明中 出现这个特性
 
 ```
 type Locker interface {
@@ -538,7 +550,21 @@ func (p T) Unlock() { … }
 
 they implement the `Locker` interface as well as the `File` interface.
 
-An interface `T` may use a (possibly qualified) interface type name `E` in place of a method specification. This is called *embedding* interface `E` in `T`. The [method set](https://go.dev/ref/spec#Method_sets) of `T` is the *union* of the method sets of `T`’s explicitly declared methods and of `T`’s embedded interfaces.
+`s1`和`s2`既实现了`File`接口 也实现了`Locker`接口
+
+#### 3.2接口方式：embedding interface
+
+An interface `T` may use a (possibly qualified) interface type name `E` in place of a method specification. 
+
+可以使用 接口类型名 代替  方式一：显式声明方法
+
+This is called *embedding* interface `E` in `T`.称为T的内嵌接口
+
+##### 3.2.1外层接口方法集：包含所有,是UNION
+
+ The [method set](https://go.dev/ref/spec#Method_sets) of `T` is the *union* of the method sets of `T`’s explicitly declared methods and of `T`’s embedded interfaces.
+
+包含显式声明也包含内嵌接口带来的。
 
 ```
 type Reader interface {
@@ -558,6 +584,8 @@ type ReadWriter interface {
 }
 ```
 
+##### 3.2.2相同名字的methods必须签名一致；对比显式声明下 签名必须`unique`
+
 A *union* of method sets contains the (exported and non-exported) methods of each method set exactly once, and methods with the [same](https://go.dev/ref/spec#Uniqueness_of_identifiers) names must have [identical](https://go.dev/ref/spec#Type_identity) signatures.
 
 ```
@@ -567,7 +595,11 @@ type ReadCloser interface {
 }
 ```
 
-An interface type `T` may not embed itself or any interface type that embeds `T`, recursively.
+##### 3.2.3拒绝自交
+
+An interface type `T` may not embed itself or  any interface type that embeds `T`, recursively.
+
+不能内嵌自己，也不能递归地内嵌自己
 
 ```
 // illegal: Bad cannot embed itself
@@ -638,11 +670,11 @@ The initial capacity does not bound its size: maps grow to accommodate the numbe
 
 初始容量不限制其大小：map可以增长以容纳存储在其中的数据条目，`nil`map相当于`empty` map,但是nil map不可以添加没有元素。
 
-### 2.12Channel types:无名之辈
+### 2.12Channel types:
 
 A channel provides a mechanism for [concurrently executing functions](https://go.dev/ref/spec#Go_statements) to communicate by [sending](https://go.dev/ref/spec#Send_statements) and [receiving](https://go.dev/ref/spec#Receive_operator) values of a specified element type.
 
-通道为[并发执行函数](https://go.dev/ref/spec#Go_statements)提供了一种机制， 通过[发送](https://go.dev/ref/spec#Send_statements)和 [接收](https://go.dev/ref/spec#Receive_operator) 指定元素类型的值来进行通信 。未初始化通道的值为`nil`。
+通道为[并发执行函数](https://go.dev/ref/spec#Go_statements)提供了一种机制， 通过[发送](https://go.dev/ref/spec#Send_statements)和 [接收](https://go.dev/ref/spec#Receive_operator) 指定元素类型的值来进行通信 。
 
  The value of an uninitialized channel is `nil`.不初始化就是zero value  值为nil
 
@@ -660,8 +692,8 @@ If no direction is given, the channel is *bidirectional*. A channel may be const
 
 ```
 chan T          // can be used to send and receive values of type T
-chan<- float64  // can only be used to send float64s       chan 是 管道  进管道 就是发送
-<-chan int      // can only be used to receive ints                     出管道 就是接收
+chan<-     float64  // can only be used to send float64s       chan 是 管道  进管道 就是发送
+<-chan     int      // can only be used to receive ints                     出管道 就是接收
 
 ```
 
@@ -682,33 +714,25 @@ A new, initialized channel value can be made using the built-in function [`make`
 make(chan int, 100)
 ```
 
-##### 有疑问对于这个管道的buffer化
+##### 查看管道的数据结构，实际上就是一个字节数组构成的Buf 。
+
+##### 疑问:什么时候unbuffered的管道的状态是ready
 
 The capacity, in number of elements, sets the size of the buffer in the channel. 
 
-##### 通信条件
+If the capacity is zero or absent, the channel is unbuffered and communication succeeds only when both a sender and receiver are ready.如果cap是0或不存在，管道没有被Buffer ，通信成功只有 收发双发准备好才行。
 
-If the capacity is zero or absent, the channel is unbuffered and communication succeeds only when both a sender and receiver are ready. Otherwise, the channel is buffered and communication succeeds without blocking if the buffer is not full (sends) or not empty (receives). 
+ Otherwise, the channel is buffered and communication succeeds without blocking if the buffer is not full (sends) or not empty (receives）另外的情况(也就是在make时指定了cap)，管道是buffer化的，当buffer不为满（发送操作时），buffer不为empty（接收操作时）通信成功不会block。至于是发送还是接收看<-的位置
 
-如果cap是0或不存在，管道没有被Buffer ，通信成功只有 收发双发准备好才行。 如果管道是Buffer好的，通信成功当这个发送方Buffer 没满  接收方buffer 非空。
+##### nil管道一定是不处于ready状态
 
-有东西可发 有空间可接收的意思吗？
-
-##### nil管道不可用，未初始化
-
-A `nil` channel is never ready for communication.
-
-#### 关闭管道close
+A `nil` channel is never ready for communication.make之后不会是nil
 
 A channel may be closed with the built-in function [`close`](https://go.dev/ref/spec#Close). The multi-valued assignment form of the [receive operator](https://go.dev/ref/spec#Receive_operator) reports whether a received value was sent before the channel was closed.
 
-##### 疑问
-
-A single channel may be used in [send statements](https://go.dev/ref/spec#Send_statements), [receive operations](https://go.dev/ref/spec#Receive_operator), and calls to the built-in functions [`cap`](https://go.dev/ref/spec#Length_and_capacity) and [`len`](https://go.dev/ref/spec#Length_and_capacity) by any number of goroutines without further synchronization.
+A single channel may be used in [send statements](https://go.dev/ref/spec#Send_statements), [receive operations](https://go.dev/ref/spec#Receive_operator), and calls to the built-in functions [`cap`](https://go.dev/ref/spec#Length_and_capacity) and [`len`](https://go.dev/ref/spec#Length_and_capacity) by any number of goroutines without further synchronization.用作
 
 Channels act as first-in-first-out queues.管道就是先进先出队列 
 
- For example, if one goroutine sends values on a channel and a second goroutine receives them, the values are received in the order sent.
-
-例如，如果一个 goroutine 在通道上发送值，而第二个 goroutine 接收它们，则按照发送的顺序接收值。
+ For example, if one goroutine sends values on a channel and a second goroutine receives them, the values are received in the order sent.例如，如果一个 goroutine 在通道上发送值，而第二个 goroutine 接收它们，则按照发送的顺序接收值。
 

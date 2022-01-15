@@ -1,5 +1,6 @@
 ---
-Go语言规范字面量元素
+Go语言规范字面量元素:除了类型常量值还有...
+字面量都是常量constant
 ---
 
 [address]: https://go.dev/ref/spec#Lexical_elements
@@ -464,3 +465,7 @@ These examples all represent the same string:
 If the source code represents a character as two code points, such as a combining form involving an accent and a letter, the result will be an error if placed in a rune literal (it is not a single code point), and will appear as two code points if placed in a string literal.
 
 如果源代码将一个字符表示为两个代码点，例如一个包含重音和字母的组合表单，那么如果将其放在一个 rune literal 中，结果将是一个错误(它不是单个代码点) ，如果将其放在一个字符串 literal 中，结果将显示为两个代码点。
+
+12Composite Literal
+
+13Func Literal
